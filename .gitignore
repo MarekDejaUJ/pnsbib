@@ -1,0 +1,14 @@
+.Rhistory
+.RData
+.Rproj.user/
+.DS_Store
+*.tar.gz
+*.Rcheck/
+src/Makevars
+src/Makevars.win
+src/*.o
+src/*.so
+src/*.dll
+src/rzig/.zig-cache/
+src/rzig/.zig-global-cache/
+src/rzig/zig-out/

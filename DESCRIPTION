@@ -1,0 +1,23 @@
+Package: pnsbib
+Type: Package
+Title: Probabilities of Causation with Partial Information
+Version: 0.0.22
+Authors@R: person("Marek", "Deja", email = "marek.deja@uj.edu.pl", role = c("aut", "cre"))
+Description: Computes Li and Pearl's multivalued probabilities-of-causation
+    bounds from observational and interventional distributions, with exact
+    finite response-type linear-programming bounds for tractable problems.
+    Supports complete-margin, partial-information and longitudinal finite
+    categorical models, sensitivity analysis, sampling-region projection
+    and graphics. Data acquisition, outcome construction and causal
+    identification are separate from the bounds engine. Bibliometric coverage
+    is one application of the general probability-table interface.
+License: GPL-3
+Encoding: UTF-8
+Depends: R (>= 4.0.0)
+Imports: lpSolve, graphics, grDevices, digest
+Suggests: testthat (>= 3.0.0), rzig (>= 0.2.3)
+Config/testthat/edition: 3
+SystemRequirements: Zig 0.16.0 (obtained automatically for source installation)
+URL: https://github.com/MarekDejaUJ/pnsbib
+BugReports: https://github.com/MarekDejaUJ/pnsbib/issues
+RoxygenNote: 7.3.3

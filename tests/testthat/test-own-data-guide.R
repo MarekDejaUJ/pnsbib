@@ -1,0 +1,25 @@
+test_that("installed own-data workflows execute with preserved labels and exports", {
+  script <- system.file("doc", "own-data.R", package = "pnsbib")
+  expect_true(nzchar(script))
+  env <- new.env(parent = globalenv())
+  capture.output(sys.source(script, envir = env))
+  result <- env$pnsbib_examples
+  expect_equal(c(result$complete$PNS$lower, result$complete$PNS$upper), c(.15, .45), tolerance = 1e-8)
+  expect_equal(sum(result$observed), 1)
+  expect_equal(nrow(result$curve), 6L)
+  expect_true(all(result$curve$status == "ok"))
+  expect_identical(result$confidence$status, "ok")
+  expect_gte(result$interval_count, 25L)
+  expect_true(all(file.exists(unlist(result$exports))))
+  expect_true(all(file.exists(unlist(result$plot_files))))
+  expect_true(file.exists(file.path(result$output, "sessionInfo.txt")))
+})
+
+test_that("own-data guide documents every exported function", {
+  guide <- readLines(system.file("doc", "own-data.md", package = "pnsbib"), warn = FALSE)
+  text <- paste(guide, collapse = "\n")
+  for (name in getNamespaceExports("pnsbib"))
+    expect_true(grepl(name, text, fixed = TRUE), info = name)
+  expect_true(grepl("template's intervention values are ignored", text, fixed = TRUE))
+  expect_true(grepl("zero lower endpoint", text, fixed = TRUE))
+})

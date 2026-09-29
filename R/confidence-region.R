@@ -42,10 +42,10 @@ poc_margin_map <- function(template) {
 #'
 #' The template supplies labels and response support only. Its probability
 #' values are ignored, including margins without samples. Missing sample cells
-#' and numeric(0) leave probabilities free in [0,1]. Thus a region can be used
+#' and numeric(0) leave probabilities free in `[0,1]`. Thus a region can be used
 #' even when the empirical cell centers are mutually incompatible.
 #'
-#' Hoeffding uses independent [0,1] unit contributions and fixed nonnegative
+#' Hoeffding uses independent `[0,1]` unit contributions and fixed nonnegative
 #' weights (equal weights by default). Its radius is
 #' sqrt(sum(w^2) * log(2 * J / alpha) / 2), where J is the complete margin-map
 #' row count and alpha = 1 - conf_level. Clopper-Pearson uses unweighted iid
@@ -60,7 +60,7 @@ poc_margin_map <- function(template) {
 #' external justification. This does not supply g-formula standard errors.
 #'
 #' @param template A static or longitudinal structural template.
-#' @param samples Named list of numeric [0,1] contribution vectors, keyed by
+#' @param samples Named list of numeric `[0,1]` contribution vectors, keyed by
 #'   [poc_margin_map()] cell_id. No missing values or automatic deletion.
 #' @param target Nonempty description of the common target population.
 #' @param sampling_unit Explicitly "individual" or "cluster".

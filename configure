@@ -11,8 +11,8 @@ if test -z "$r_bin"; then
     printf '%s\n' 'R is required to configure this package.' >&2
     exit 1
 fi
-zig_path=$("$r_bin" --vanilla --slave -f inst/toolchain/zig-toolchain.R) || exit 1
-zig_version=$("$zig_path" version)
+# Resolve the compiler inside the build's R process so a downloaded compiler
+# remains available until compilation finishes and temporary files are removed.
 # Linux distributions can install headers outside R_HOME (e.g. /usr/share/R).
 # Ask this R installation for its include component instead of constructing it.
 r_include_dir=$("$r_bin" --vanilla --slave -e 'cat(R.home("include"))') || {
@@ -69,15 +69,13 @@ escape_sed_replacement() {
     printf '%s' "$1" | sed 's/[\\&|]/\\&/g'
 }
 
-zig_sub=$(escape_sed_replacement "$zig_path")
 target_sub=$(escape_sed_replacement "$zig_target_arg")
 include_sub=$(escape_sed_replacement "$r_include_dir")
 statlib_sub=$(escape_sed_replacement "$statlib")
-sed -e "s|@ZIG@|$zig_sub|g" \
-    -e "s|@ZIG_TARGET_ARG@|$target_sub|g" \
+sed -e "s|@ZIG_TARGET_ARG@|$target_sub|g" \
     -e "s|@R_INCLUDE_DIR@|$include_sub|g" \
     -e "s|@STATLIB@|$statlib_sub|g" \
     "$makevars_template" > "$makevars_output"
 
-printf 'using Zig %s at %s\n' "$zig_version" "$zig_path"
+printf '%s\n' 'Zig 0.16.0 will be resolved during compilation (temporary setup by default).'
 printf 'using R compiler %s for %s\n' "$r_cc" "$zig_target_arg"

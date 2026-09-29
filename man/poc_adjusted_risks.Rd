@@ -30,4 +30,18 @@ x <- cbind(intercept=1, baseline=c(-1,0,1,-1,0,1))
 y <- cbind(year1=c(0,0,1,0,1,1), year2=c(0,1,1,1,1,1))
 a <- poc_adjusted_risks(x,y,group=c(0,0,0,1,1,1))
 a$risks
+poc_risk_fit(x, y[, 1])
+}
+
+\references{
+le Cessie, S. and van Houwelingen, J. C. (1992). Ridge estimators in
+logistic regression. \emph{Applied Statistics}, 41(1), 191--201.
+\doi{10.2307/2347628}.
+
+Hernan, M. A. and Robins, J. M. (2020). \emph{Causal Inference: What If}.
+Chapman & Hall/CRC. \url{https://miguelhernan.org/whatifbook}.
+
+See \link{pnsbib-methods} for the method-to-function map, assumptions and
+references. Graphics and reporting functions preserve supplied results;
+they do not perform causal identification.
 }

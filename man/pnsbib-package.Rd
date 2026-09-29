@@ -47,3 +47,8 @@ system.file("doc", "own-data.md", package = "pnsbib")
 system.file("doc", "nested-identification.md", package = "pnsbib")
 source(system.file("doc", "nested-identification.R", package = "pnsbib"))
 }
+\references{
+See \link{pnsbib-methods} for the method-to-function map, assumptions and
+references. Graphics and reporting functions preserve supplied results;
+they do not perform causal identification.
+}

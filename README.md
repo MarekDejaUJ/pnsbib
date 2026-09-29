@@ -13,11 +13,15 @@ install.packages("remotes")
 remotes::install_github("MarekDejaUJ/pnsbib", upgrade = "never")
 ```
 
-The repository root is the R package; no `subdir` argument is needed. Source installation automatically obtains Zig 0.16.0 when that version is unavailable. The R-only installer downloads the official archive, checks its pinned size and SHA-256 before extraction, and caches the compiler under `tools::R_user_dir("pnsbib", "cache")`, outside the package source. A first download is approximately 49–93 MiB depending on platform; extraction needs additional disk space. Later installations reuse the verified cache. There is no Python requirement, manual Zig download or special project folder to configure. An installed binary requires no compiler.
+The repository root is the R package; no `subdir` argument is needed. Source installation automatically obtains Zig 0.16.0 when that version is unavailable. The R-only installer downloads the official archive, checks its pinned size and SHA-256 before extraction, and keeps the compiler in the build R session's temporary directory, outside the package source. Temporary compiler files are removed after compilation. A first download is approximately 49–93 MiB depending on platform; extraction needs additional disk space. An existing compatible compiler is reused; otherwise each source installation obtains a temporary copy. There is no Python requirement, manual Zig download or special project folder to configure. An installed binary requires no compiler.
 
 The generated rzig framework is bundled; `rzig` is a suggested development dependency for regenerating bindings, not a runtime requirement. Automatic compiler setup is provided by pnsbib, independently of rzig 0.2.3. Imported R dependencies are installed automatically. Building requires a C toolchain suitable for R: Xcode Command Line Tools on macOS, R development headers and a C compiler on Linux, or the matching Rtools distribution on Windows. Automatic archive selection covers aarch64 and x86_64 on macOS, Linux and Windows. The current release is locally validated on macOS; other platforms require their own checks.
 
-For managed or offline installations, `ZIG` can select an existing Zig 0.16.0 executable, `PNSBIB_ZIG_CACHE` can relocate the user cache, and `PNSBIB_ZIG_ARCHIVE` can supply the matching official archive locally. The local archive undergoes the same pinned size and SHA-256 checks. `PNSBIB_ZIG_DOWNLOAD=false` disables network downloads. A wrong explicit compiler, corrupt archive or invalid cache entry causes an error; the installer does not silently substitute an unverified compiler. These settings are optional and are unnecessary for ordinary online installation.
+For managed or offline installations, `ZIG` can select an existing Zig 0.16.0 executable, `PNSBIB_ZIG_CACHE` can explicitly opt into a persistent cache at a user-chosen absolute path, and `PNSBIB_ZIG_ARCHIVE` can supply the matching official archive locally. The local archive undergoes the same pinned size and SHA-256 checks. `PNSBIB_ZIG_DOWNLOAD=false` disables network downloads. A wrong explicit compiler, corrupt archive or invalid cache entry causes an error; the installer does not silently substitute an unverified compiler. These settings are optional and are unnecessary for ordinary online installation.
+
+## Installed documentation
+
+After installation, `vignette("using-pnsbib", package = "pnsbib")` provides a runnable, installation-free workflow. `help("pnsbib-methods")` maps every public function to its method and references; `citation("pnsbib")` gives the software citation. Function help pages include small executable examples. The installed own-data and adjusted-risk guides provide further cases.
 
 ## Estimate risks, then bound attribution
 
@@ -151,8 +155,8 @@ install.packages(c("lpSolve", "digest", "testthat", "rzig"))
 
 ```sh
 R CMD build pnsbib
-R CMD check --no-manual pnsbib_0.0.22.tar.gz
-R CMD INSTALL pnsbib_0.0.22.tar.gz
+R CMD check --no-manual pnsbib_0.2.0.tar.gz
+R CMD INSTALL pnsbib_0.2.0.tar.gz
 ```
 
 To obtain the source, run `git clone https://github.com/MarekDejaUJ/pnsbib.git` from the parent directory before these commands. `R CMD check` runs the R regression suite and installed examples. To run the standalone kernel tests from the cloned `pnsbib` directory, resolve the same managed compiler:

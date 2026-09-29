@@ -4,6 +4,7 @@ test_that("installed own-data workflows execute with preserved labels and export
   env <- new.env(parent = globalenv())
   capture.output(sys.source(script, envir = env))
   result <- env$pnsbib_examples
+  on.exit(unlink(result$output, recursive = TRUE), add = TRUE)
   expect_equal(c(result$complete$PNS$lower, result$complete$PNS$upper), c(.15, .45), tolerance = 1e-8)
   expect_equal(sum(result$observed), 1)
   expect_equal(nrow(result$curve), 6L)

@@ -34,3 +34,8 @@ p <- poc_plot(poc_analysis(list(poc_bounds(m, q), poc_exact(m, q)),
   provenance = list(inputs = "synthetic example")), draw = FALSE)
 plot(p)
 }
+\references{
+See \link{pnsbib-methods} for the method-to-function map, assumptions and
+references. Graphics and reporting functions preserve supplied results;
+they do not perform causal identification.
+}

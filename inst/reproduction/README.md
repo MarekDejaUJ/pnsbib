@@ -1,6 +1,6 @@
 # Reproduce probability bounds and numerical experiments
 
-These R scripts reproduce 570 adjusted institutional bounds from aggregate risks and path counts, verify native LP certificates and run 600 known-population repetitions. They need pnsbib 0.0.22 and the suggested `digest` package. No Python, API credentials or individual researcher records are used.
+These R scripts reproduce 570 adjusted institutional bounds from aggregate risks and path counts, verify native LP certificates and run 600 known-population repetitions. They need pnsbib 0.2.0 and the suggested `digest` package. No Python, API credentials or individual researcher records are used.
 
 ## Run from R
 

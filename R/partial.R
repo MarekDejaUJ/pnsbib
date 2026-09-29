@@ -6,7 +6,7 @@
 #' whole-population P(Y_0=1).
 #'
 #' @param query A [poc_query()] event, optionally conditional on factual X/Y.
-#' @param lower,upper Probability endpoints in [0,1]; upper defaults to lower
+#' @param lower,upper Probability endpoints in `[0,1]`; upper defaults to lower
 #'   for an equality.
 #' @param stratum Optional stratum label. The probability is conditional on
 #'   that stratum, and additionally on factual X/Y if query is conditional.

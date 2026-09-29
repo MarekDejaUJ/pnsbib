@@ -18,8 +18,8 @@ poc_confidence_region(
 \arguments{
 \item{template}{A static or longitudinal structural template.}
 
-\item{samples}{Named list of numeric [0,1] contribution vectors, keyed by
-[poc_margin_map()] cell_id. No missing values or automatic deletion.}
+\item{samples}{Named list of numeric \verb{[0,1]} contribution vectors, keyed by
+\code{\link[=poc_margin_map]{poc_margin_map()}} cell_id. No missing values or automatic deletion.}
 
 \item{target}{Nonempty description of the common target population.}
 
@@ -38,16 +38,16 @@ common-target assumptions. This records a declaration, not a verification.}
 }
 \value{
 A pnsbib_confidence_region with a rectangular cells table, sampling
-  metadata and structural template. Raw sample vectors are not retained.
+metadata and structural template. Raw sample vectors are not retained.
 }
 \description{
 The template supplies labels and response support only. Its probability
 values are ignored, including margins without samples. Missing sample cells
-and numeric(0) leave probabilities free in [0,1]. Thus a region can be used
+and numeric(0) leave probabilities free in \verb{[0,1]}. Thus a region can be used
 even when the empirical cell centers are mutually incompatible.
 }
 \details{
-Hoeffding uses independent [0,1] unit contributions and fixed nonnegative
+Hoeffding uses independent \verb{[0,1]} unit contributions and fixed nonnegative
 weights (equal weights by default). Its radius is
 sqrt(sum(w^2) * log(2 * J / alpha) / 2), where J is the complete margin-map
 row count and alpha = 1 - conf_level. Clopper-Pearson uses unweighted iid
@@ -75,5 +75,5 @@ poc_confidence_bounds(region, poc_query(c("0" = "0", "1" = "1")))
 }
 \references{
 Hoeffding (1963), doi:10.1080/01621459.1963.10500830;
-  [stats::binom.test()] for Clopper-Pearson intervals.
+\code{\link[stats:binom.test]{stats::binom.test()}} for Clopper-Pearson intervals.
 }

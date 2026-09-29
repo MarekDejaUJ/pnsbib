@@ -1,3 +1,9 @@
+# pnsbib 0.2.0
+
+- Add executable examples across all exported functions, a methods/reference guide, a software citation and an installation-free workflow vignette.
+- Use session-temporary storage for automatic checksum-verified Zig setup. Persistent caching requires an explicit path; temporary compiler files are removed after compilation. Limit build jobs to two and respect R's C compiler flags.
+- Keep all existing computational interfaces, numerical kernels, bounds defaults and empirical inputs unchanged.
+
 # pnsbib 0.0.22
 
 Package-only distribution under GPL-3, with retained notices for the bundled MIT-licensed rzig framework. Added automatic R-only, checksum-verified Zig 0.16.0 setup for source installation, GitHub installation instructions, portable reproduction scripts, six-panel adjusted attribution graphics and aggregate inputs. Numerical functions, signatures, tolerances and defaults are unchanged from 0.0.21.

@@ -42,3 +42,12 @@ Causation: From Recursive to Closed-Form Bounds. IJCAI, 4063--4070.
 \doi{10.24963/ijcai.2026/452}.
 }
 \seealso{\code{\link{poc_bounds}}, \code{\link{poc_exact}}}
+\examples{
+o <- rbind(reference = c(failure = .35, success = .15),
+           active = c(failure = .20, success = .30))
+a <- rbind(reference = c(failure = .70, success = .30),
+           active = c(failure = .55, success = .45))
+m <- poc_model(o, a)
+q <- poc_query(c(reference = "failure", active = "success"))
+poc_shu2026(m, q)
+}

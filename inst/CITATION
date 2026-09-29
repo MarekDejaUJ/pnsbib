@@ -1,0 +1,9 @@
+citHeader("To cite pnsbib, use the software reference and the methods relevant to your calculation:")
+bibentry(bibtype = "Manual",
+  title = "pnsbib: Probabilities of Causation with Partial Information",
+  author = person("Marek", "Deja"),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/MarekDejaUJ/pnsbib",
+  textVersion = paste0("Deja M (2026). pnsbib: Probabilities of Causation with Partial Information. R package version ", meta$Version, ". https://github.com/MarekDejaUJ/pnsbib"))
+citFooter("Consult help('pnsbib-methods') for references appropriate to analytical bounds, LP, standardization and sampling-region calculations.")

@@ -1,7 +1,7 @@
 #' Sensitivity to bounded interventional margins
 #'
 #' For each nonnegative delta, allows every interventional cell probability to
-#' vary within the absolute band [a - delta, a + delta], subject to each row
+#' vary within the absolute band `[a - delta, a + delta]`, subject to each row
 #' remaining a probability distribution and to the fixed observational table.
 #' An exact response-type linear program optimizes the requested event jointly
 #' over every compatible interventional table in the band. The interval is an

@@ -1,4 +1,5 @@
 ^README\.md$
+^cran-comments\.md$
 ^\.git$
 ^\.github$
 ^\.gitignore$

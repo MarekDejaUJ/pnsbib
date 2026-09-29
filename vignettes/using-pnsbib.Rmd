@@ -1,0 +1,178 @@
+---
+title: "Using pnsbib with your own data"
+author: "Marek Deja"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using pnsbib with your own data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(pnsbib)
+```
+
+## Define the scientific inputs
+
+Prepare one factual record per unit with prespecified treatment and outcome labels. Outcomes are finite categories, not automatically ranks. Retain genuine zeros; unknown measurements need an explicit rule before aggregation. Post-treatment filtering changes the target population. A causal interpretation requires consistency, an appropriate treatment contrast, a justified source of intervention risks, overlap and an interference assessment.[^1]
+
+| Available information | Constructor | Calculation |
+| --- | --- | --- |
+| All intervention margins | `poc_model()` | `poc_bounds()`, `poc_shu2026()`, `poc_exact()` |
+| Selected risks or bands | `poc_partial_model()` | `poc_partial_bounds()` |
+| Regimes and outcome paths | `poc_longitudinal_model()` | `poc_longitudinal_bounds()`, `poc_curve()` |
+
+PNS is the probability of success under the active regime and failure under the reference. PN conditions on factual active success; PS conditions on factual reference failure. These are estimands; complete, partial and longitudinal describe information models.[^2]
+
+## Complete margins and analytical versus LP calculations
+
+The factual matrix sums to one over all cells. Each intervention row sums to one. The intervention risks below are supplied hypothetical population quantities; normalizing factual rows would answer a different question.
+
+```{r complete}
+o <- rbind(reference = c(failure = .35, success = .15),
+           active = c(failure = .20, success = .30))
+a <- rbind(reference = c(failure = .70, success = .30),
+           active = c(failure = .55, success = .45))
+m <- poc_model(o, a)
+q <- poc_query(c(reference = "failure", active = "success"))
+queries <- list(
+  PNS = q,
+  PN = poc_query(c(reference = "failure"), "active", "success", TRUE),
+  PS = poc_query(c(active = "success"), "reference", "failure", TRUE))
+bounds <- lapply(queries, function(query) poc_exact(m, query, lp_backend = "zig"))
+comparison <- list(poc_bounds(m, q), poc_shu2026(m, q), bounds$PNS)
+do.call(rbind, comparison)[, c("lower", "upper", "method", "status")]
+stopifnot(abs(bounds$PNS$lower - .15) < 1e-8,
+          abs(bounds$PNS$upper - .45) < 1e-8)
+```
+
+Li--Pearl analytical bounds and Shu--Wang--Li closed forms retain their documented validity labels.[^3][^4] The LP interval is sharp for its supplied finite response model. Agreement on one example is not proof of general analytical sharpness. The `lp_backend = "zig"` setting selects native optimization explicitly; the default remains the independent `"reference"` LP route.
+
+## Partial information and nested input bands
+
+Unknown risks remain free. Add only justified event equalities or bounds, and distinguish subgroup risks from population risks. Assumption bands are sensitivity restrictions, not sampling confidence intervals.
+
+```{r partial}
+free <- poc_partial_model(o, lp_backend = "zig")
+restrictions <- list(
+  poc_constraint(poc_query(c(reference = "success")), .25, .35),
+  poc_constraint(poc_query(c(active = "success")), .40, .50))
+partial <- poc_partial_model(o, restrictions, lp_backend = "zig")
+poc_partial_bounds(free, q)
+poc_partial_bounds(partial, q, return_witness = TRUE)
+poc_sensitivity(m, q, delta = c(0, .05))
+poc_input_sensitivity(m, q, observed_delta = .01, interventional_delta = .05)
+```
+
+The bounds-in-bounds interpretation compares feasible response distributions across a declared input region. Nested restrictions cannot widen the bound for the same estimand and support. Changing fitted risk centers need not produce nested regions.
+
+## Annual and cumulative longitudinal queries
+
+A period index acquires calendar meaning from the study design. Supply all factual history/path cells, including zeros, and define potential-path support independently of the observed sample. Absorption is appropriate for cumulative first success, but not for unrestricted annual success.
+
+```{r longitudinal}
+regimes <- rbind(off = c(0, 0), on = c(1, 1))
+observed <- expand.grid(history = c("off", "on"),
+                        path = c("00", "01", "11"), stringsAsFactors = FALSE)
+observed$prob <- c(.2, .1, .1, .1, .2, .3)
+trajectory <- poc_longitudinal_model(observed, regimes, absorbing = TRUE)
+horizon_query <- poc_longitudinal_query("pns", "on", "off", 2)
+poc_longitudinal_bounds(trajectory, horizon_query, lp_backend = "zig")
+curve <- poc_curve(trajectory, "on", "off")
+poc_longitudinal_sensitivity(trajectory, horizon_query, time_delta = .05)
+curve[, c("estimand", "horizon", "lower", "upper")]
+```
+
+Optional `time_margins` or `interventional_paths` add externally justified intervention information. Outcome-set queries, categorical paths, prefix conditioning, persistence, first-entry and lagged events are described in the installed own-data guide. Additional horizons alone need not tighten attribution.
+
+## Standardize risks before bounding attribution
+
+A prepared baseline matrix can support penalized binary-risk estimation. The estimator uses ridge-logistic principles[^5] and averages predictions over a declared common target. Every coefficient receives a positive penalty. The package supplies no generic confidence interval for estimated risks.
+
+```{r adjusted}
+group <- rep(0:1, each = 8)
+x <- cbind(intercept = 1, baseline = rep(c(-1, 0, 1, 0, -1, 0, 1, 0), 2))
+y <- cbind(t1 = rep(c(0, 0, 1, 1, 0, 1, 0, 1), 2),
+           t2 = rep(c(0, 1, 0, 1, 1, 0, 1, 0), 2))
+poc_risk_fit(x, y[, 1])$coefficients
+annual <- poc_adjusted_risks(x, y, group, mode = "annual")
+cumulative <- poc_adjusted_risks(x, y, group, mode = "cumulative")
+annual$risks
+cumulative$risks
+factual <- unclass(table(factor(group, 0:1), factor(y[, 1], 0:1)))/length(group)
+dimnames(factual) <- list(c("0", "1"), c("0", "1"))
+risk <- annual$risks[, 1]
+adjusted <- poc_model(factual, cbind("0" = 1-risk, "1" = risk))
+poc_exact(adjusted, poc_query(c("0" = "0", "1" = "1")))
+```
+
+Cumulative mode takes annual binary observations, fits hazards among units with no earlier success, then averages individual survival products. Give the same baseline target to both groups. An empty training risk set fails explicitly. The full adjusted-risk guide connects these inputs to partial bands and trajectory margins as well as the complete model.
+
+For discrete baseline covariates, the separate `poc_gformula()` uses empirical stratum-specific risks and requires positive treatment support in every target stratum.[^1]
+
+```{r discrete}
+d <- expand.grid(treatment = c("reference", "active"),
+                 outcome = c("failure", "success"), baseline = c("A", "B"))
+g <- poc_gformula(d, "treatment", "outcome", "baseline",
+                 assume_identification = TRUE)
+g$support
+```
+
+## Sampling uncertainty, summaries and graphics
+
+A confidence template contributes labels and structural support only: its numeric probabilities are ignored. Sampling contributions must be bounded and independent across units, with the stated common target. Hoeffding regions allow externally fixed weights; Clopper--Pearson regions require unweighted Bernoulli contributions.[^6][^7]
+
+```{r uncertainty}
+map <- poc_margin_map(m)
+samples <- setNames(lapply(1:4, function(j) as.numeric(rep(1:4, 25) == j)),
+                    map$cell_id[map$type == "observed"])
+region <- poc_confidence_region(m, samples, target = "Illustrative iid population",
+  sampling_unit = "individual", method = "clopper_pearson", assume_sampling = TRUE)
+poc_confidence_bounds(region, queries$PNS)
+```
+
+The example contributes only factual samples, leaving unsampled intervention margins free. A projected interval is conditional on the causal and sampling assumptions; predictive improvement cannot verify those assumptions.
+
+```{r graphics, fig.width=6, fig.height=4}
+report <- poc_analysis(comparison, provenance = list(target = "Synthetic population"))
+summary(report)
+figure <- poc_plot(report, draw = FALSE, monochrome = TRUE)
+plot(figure)
+```
+
+Export functions require explicit destinations and refuse existing output collisions. The following temporary files are removed after use. Use a new chosen destination to retain your own results.
+
+```{r export}
+local({
+  out <- tempfile("pnsbib-vignette-")
+  dir.create(out)
+  on.exit(unlink(out, recursive = TRUE))
+  poc_export_summary(report, file.path(out, "tables"))
+  poc_save_plot(figure, file.path(out, "bounds"), formats = "pdf", width = 6)
+  if (capabilities("png"))
+    poc_save_plot(figure, file.path(out, "raster"), formats = "png", width = 6, dpi = 100)
+})
+```
+
+## Diagnostics and further examples
+
+Inspect `status`, `method`, sharpness labels and denominators before interpreting endpoints. Incompatible margins cannot define a common response population. Zero conditioning probability makes a conditional estimand undefined. A variable or workspace limit is a resource diagnostic, not evidence of infeasibility. Reduce only scientifically justified state spaces, not tolerances to manufacture a result.
+
+Use `help("pnsbib-methods")` for the full reference map, `help("pnsbib-workflows")` for every supported interface and `citation("pnsbib")` for the software citation. The installed `doc/own-data.md`, `doc/adjusted-risks.md` and `doc/nested-identification.md` include additional examples, assumptions and executable companions. The separate aggregate reproduction scripts require explicit output paths and may take several minutes.
+
+## References
+
+[^1]: Hernan MA, Robins JM (2020). *Causal Inference: What If*. Chapman & Hall/CRC. <https://miguelhernan.org/whatifbook>.
+
+[^2]: Tian J, Pearl J (2000). Probabilities of causation: Bounds and identification. *Annals of Mathematics and Artificial Intelligence*, 28, 287–313. <https://doi.org/10.1023/A:1018912507879>.
+
+[^3]: Li A, Pearl J (2024). Probabilities of Causation with Nonbinary Treatment and Effect. *Proceedings of AAAI*, 38(18), 20465–20472. <https://doi.org/10.1609/aaai.v38i18.30030>.
+
+[^4]: Shu X, Wang S, Li A (2026). Identification of Probabilities of Causation: From Recursive to Closed-Form Bounds. *Proceedings of IJCAI*, 4063–4070. <https://doi.org/10.24963/ijcai.2026/452>.
+
+[^5]: le Cessie S, van Houwelingen JC (1992). Ridge estimators in logistic regression. *Applied Statistics*, 41(1), 191–201. <https://doi.org/10.2307/2347628>.
+
+[^6]: Hoeffding W (1963). Probability inequalities for sums of bounded random variables. *Journal of the American Statistical Association*, 58(301), 13–30. <https://doi.org/10.1080/01621459.1963.10500830>.
+
+[^7]: Clopper CJ, Pearson ES (1934). The use of confidence or fiducial limits illustrated in the case of the binomial. *Biometrika*, 26(4), 404–413. <https://doi.org/10.1093/biomet/26.4.404>.

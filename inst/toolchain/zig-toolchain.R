@@ -83,7 +83,7 @@ pnsbib_zig_install <- function(spec,cache,archive="",download=TRUE,
   on.exit(unlink(stage,recursive=TRUE),add=TRUE)
   if(!nzchar(archive)) {
     archive <- file.path(stage,paste0(spec$top,".",spec$format))
-    message("Downloading Zig ",spec$version," to the user cache (",round(spec$size/1024^2)," MiB).")
+    message("Downloading Zig ",spec$version," to the build cache (",round(spec$size/1024^2)," MiB).")
     old <- options(timeout=max(300,getOption("timeout",60)))
     on.exit(options(old),add=TRUE)
     status <- tryCatch(downloader(spec$url,archive,mode="wb",quiet=TRUE,method="libcurl"),
@@ -112,8 +112,12 @@ pnsbib_zig_install <- function(spec,cache,archive="",download=TRUE,
                          nrow=1,dimnames=list(NULL,c("Version","URL","Archive-SHA256","Binary-SHA256")))
   write.dcf(receipt_data,file.path(extracted,".pnsbib-toolchain.dcf"))
   if(!file.rename(extracted,target)) stop("Could not finalize Zig cache: ",target)
-  message("Verified Zig ",spec$version," is ready in the user cache.")
+  message("Verified Zig ",spec$version," is ready in the build cache.")
   normalizePath(binary,winslash="/",mustWork=TRUE)
+}
+
+pnsbib_zig_cache <- function(explicit=Sys.getenv("PNSBIB_ZIG_CACHE","")) {
+  if(nzchar(explicit)) file.path(explicit,"zig") else file.path(tempdir(),"pnsbib-zig")
 }
 
 pnsbib_zig_resolve <- function() {
@@ -129,14 +133,35 @@ pnsbib_zig_resolve <- function() {
   if(nzchar(found) && pnsbib_zig_version(found)==version)
     return(normalizePath(found,winslash="/",mustWork=TRUE))
   spec <- pnsbib_zig_spec()
-  cache <- file.path(Sys.getenv("PNSBIB_ZIG_CACHE",tools::R_user_dir("pnsbib","cache")),"zig")
+  cache <- pnsbib_zig_cache()
   archive <- Sys.getenv("PNSBIB_ZIG_ARCHIVE","")
   download <- !tolower(Sys.getenv("PNSBIB_ZIG_DOWNLOAD","true")) %in% c("0","false","no")
   pnsbib_zig_install(spec,cache,archive,download)
 }
 
+pnsbib_zig_build <- function(args,runner=system2,resolver=pnsbib_zig_resolve) {
+  # The R process owns the default compiler cache for the entire build.
+  # An explicit persistent cache is user-managed and is never removed here.
+  cache <- pnsbib_zig_cache("")
+  if(!nzchar(Sys.getenv("PNSBIB_ZIG_CACHE","")))
+    on.exit(unlink(cache,recursive=TRUE),add=TRUE)
+  previous_tmp <- Sys.getenv("TMPDIR",unset=NA_character_)
+  Sys.setenv(TMPDIR=tempdir())
+  on.exit(if(is.na(previous_tmp)) Sys.unsetenv("TMPDIR") else
+    Sys.setenv(TMPDIR=previous_tmp),add=TRUE)
+  zig <- resolver()
+  message("Compiling with Zig 0.16.0: ",zig)
+  status <- runner(zig,c("build",shQuote(args)))
+  if(!identical(as.integer(status),0L)) stop("Zig compilation failed (status ",status,").")
+  invisible(status)
+}
+
 if(sys.nframe()==0L) {
-  tryCatch(cat(pnsbib_zig_resolve(),"\n",sep=""),error=function(e) {
+  tryCatch({
+    args <- commandArgs(trailingOnly=TRUE)
+    if(length(args) && args[1L]=="--build") pnsbib_zig_build(args[-1L]) else
+      stop("This installation helper must be invoked with --build.")
+  },error=function(e) {
     message(conditionMessage(e));quit(status=1L)
   })
 }

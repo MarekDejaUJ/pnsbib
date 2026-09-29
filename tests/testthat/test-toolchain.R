@@ -1,6 +1,34 @@
 toolchain <- new.env(parent=baseenv())
 sys.source(system.file("toolchain","zig-toolchain.R",package="pnsbib"),envir=toolchain)
 
+test_that("default compiler storage is session-local and persistent storage is opt-in", {
+  expect_identical(toolchain$pnsbib_zig_cache(""),file.path(tempdir(),"pnsbib-zig"))
+  expect_identical(toolchain$pnsbib_zig_cache("/explicit/cache"),"/explicit/cache/zig")
+})
+
+test_that("the compiler stays alive through build and temporary storage is cleaned", {
+  old <- Sys.getenv("PNSBIB_ZIG_CACHE",unset=NA_character_)
+  Sys.unsetenv("PNSBIB_ZIG_CACHE")
+  on.exit(if(is.na(old)) Sys.unsetenv("PNSBIB_ZIG_CACHE") else
+    Sys.setenv(PNSBIB_ZIG_CACHE=old),add=TRUE)
+  cache <- toolchain$pnsbib_zig_cache("")
+  resolver <- function() {
+    dir.create(cache,showWarnings=FALSE)
+    path <- file.path(cache,"zig");writeLines("fixture",path);path
+  }
+  runner <- function(command,args) {
+    expect_true(file.exists(command))
+    expect_identical(Sys.getenv("TMPDIR"),tempdir())
+    expect_identical(args,c("build",shQuote(c("-j2","-Dname=with space"))))
+    0L
+  }
+  expect_message(toolchain$pnsbib_zig_build(c("-j2","-Dname=with space"),runner,resolver),"Compiling")
+  expect_false(dir.exists(cache))
+  expect_error(suppressMessages(toolchain$pnsbib_zig_build(character(),
+    function(...) 1L,resolver)),"compilation failed")
+  expect_false(dir.exists(cache))
+})
+
 test_that("automatic compiler archives have fixed platform-specific checksums", {
   for(os in c("Darwin","Linux","Windows")) for(arch in c("aarch64","x86_64")) {
     s <- toolchain$pnsbib_zig_spec(os,arch)

@@ -1,6 +1,6 @@
 # Fixed-design numerical validation and independent binary allocation oracle.
 library(pnsbib)
-stopifnot(as.character(packageVersion("pnsbib"))=="0.0.22")
+stopifnot(as.character(packageVersion("pnsbib"))=="0.2.0")
 base_dir <- "."
 save_tsv <- function(x,name) write.table(x,file.path(out,paste0(name,".tsv")),sep="\t",quote=FALSE,row.names=FALSE,na="NA")
 queries <- list(PNS=poc_query(c("0"="0","1"="1")),

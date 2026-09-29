@@ -58,4 +58,10 @@ after sourcing to retain results in an unused local directory.
 system.file("doc", "own-data.md", package = "pnsbib")
 source(system.file("doc", "own-data.R", package = "pnsbib"))
 pnsbib_examples$complete$PNS
+unlink(pnsbib_examples$output, recursive = TRUE)
+}
+\references{
+See \link{pnsbib-methods} for the method-to-function map, assumptions and
+references. Graphics and reporting functions preserve supplied results;
+they do not perform causal identification.
 }

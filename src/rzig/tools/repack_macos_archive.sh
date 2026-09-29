@@ -16,6 +16,10 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
+# Apple tool shims can create xcrun_db; keep it inside this owned directory.
+TMPDIR=$repack_dir
+export TMPDIR
+
 cd "$repack_dir"
 /usr/bin/ar -x "$archive"
 set -- ./*.o

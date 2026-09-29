@@ -19,6 +19,7 @@ Imports: lpSolve, graphics, grDevices, digest
 Suggests: testthat (>= 3.0.0), rzig (>= 0.2.3), knitr, rmarkdown
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Config/build/clean-inst-doc: FALSE
 SystemRequirements: Zig 0.16.0 (obtained automatically in temporary storage
     during source installation if unavailable)
 URL: https://github.com/MarekDejaUJ/pnsbib

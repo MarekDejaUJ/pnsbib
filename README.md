@@ -150,7 +150,7 @@ Graphics consume computed results and do not invoke solvers. Export preserves en
 Build from source in a local working directory. Install the R dependencies and suggested test/development packages first; compiler setup follows the automatic process above. No bibliographic API keys are required.
 
 ```r
-install.packages(c("lpSolve", "digest", "testthat", "rzig"))
+install.packages(c("lpSolve", "digest", "testthat", "rzig", "knitr", "rmarkdown"))
 ```
 
 ```sh
@@ -159,11 +159,10 @@ R CMD check --no-manual pnsbib_0.2.0.tar.gz
 R CMD INSTALL pnsbib_0.2.0.tar.gz
 ```
 
-To obtain the source, run `git clone https://github.com/MarekDejaUJ/pnsbib.git` from the parent directory before these commands. `R CMD check` runs the R regression suite and installed examples. To run the standalone kernel tests from the cloned `pnsbib` directory, resolve the same managed compiler:
+To obtain the source, run `git clone https://github.com/MarekDejaUJ/pnsbib.git` from the parent directory before these commands. `R CMD check` runs the R regression suite and installed examples. To run the standalone kernel tests from the cloned `pnsbib` directory, use the same managed build helper so that the temporary compiler remains available until testing finishes:
 
 ```sh
-zig_compiler="$(Rscript inst/toolchain/zig-toolchain.R)"
-(cd src/rzig && "$zig_compiler" build test --summary all)
+(cd src/rzig && Rscript --vanilla ../../inst/toolchain/zig-toolchain.R --build test --release=safe -j2 --summary all --cache-dir .zig-cache --global-cache-dir .zig-global-cache)
 ```
 
 ## Reproduce analyses

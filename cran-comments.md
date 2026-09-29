@@ -26,5 +26,3 @@ Export functions require explicit file or directory arguments. Examples, tests a
 ## Scope of the release
 
 Version 0.2.0 adds documentation, method citations, an installed tutorial, executable examples and installation safeguards. Existing R numerical expressions and Zig/C computational sources are unchanged from 0.0.22. Aggregate replays reproduce 570 bound rows, 600 simulation repetitions and 1,764 independently checked LP certificates, with seven result tables byte-identical to the previous release. License: GPL-3, with retained notices for the bundled rzig framework.
-
-No submission to CRAN has been made.

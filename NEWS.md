@@ -1,3 +1,9 @@
+# pnsbib 0.2.1
+
+- Support Zig 0.16.x and 0.17.x. An explicit `ZIG` executable or a `zig` on the `PATH` from either series is used directly; other series are rejected with the version found. Automatic setup still obtains Zig 0.16.0; `PNSBIB_ZIG_VERSION=0.17.0` selects Zig 0.17.0 instead, verified against its published SHA-256 and size.
+- Refresh the vendored rzig framework to 0.3.0, which reads the type information of both compiler series and replaces interfaces removed in Zig 0.17. Pass the global compiler cache through `ZIG_GLOBAL_CACHE_DIR`, use the header-free registration entry point and drop the Zig export scanner that rzig 0.3.0 no longer vendors.
+- Replace the removed array-repetition operator in two native test fixtures. Numerical kernels, exported functions, defaults, tolerances and results are unchanged: the full test suite and the reproduction scripts give byte-identical outputs with Zig 0.16 and 0.17.
+
 # pnsbib 0.2.0
 
 - Preserve the shipped guides and executable companions during pkgbuild/rcmdcheck builds; update standalone native-test instructions and vignette dependencies.

@@ -1,7 +1,7 @@
 Package: pnsbib
 Type: Package
 Title: Probabilities of Causation with Partial Information
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person("Marek", "Deja", email = "marek.deja@uj.edu.pl", role = c("aut", "cre"))
 Description: Computes Li and Pearl's (2024) <doi:10.1609/aaai.v38i18.30030>
     multivalued probabilities-of-causation
@@ -16,12 +16,14 @@ License: GPL-3
 Encoding: UTF-8
 Depends: R (>= 4.0.0)
 Imports: lpSolve, graphics, grDevices, digest
-Suggests: testthat (>= 3.0.0), rzig (>= 0.2.3), knitr, rmarkdown
+Suggests: testthat (>= 3.0.0), rzig (>= 0.3.0), knitr, rmarkdown
+Remotes: MarekDejaUJ/rzig
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/build/clean-inst-doc: FALSE
-SystemRequirements: Zig 0.16.0 (obtained automatically in temporary storage
-    during source installation if unavailable)
+SystemRequirements: Zig 0.16.x or 0.17.x (Zig 0.16.0 is obtained
+    automatically in temporary storage during source installation if no
+    supported version is available)
 URL: https://github.com/MarekDejaUJ/pnsbib
 BugReports: https://github.com/MarekDejaUJ/pnsbib/issues
 RoxygenNote: 7.3.3

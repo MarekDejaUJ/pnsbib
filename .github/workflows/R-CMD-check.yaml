@@ -12,7 +12,7 @@ permissions:
 jobs:
   check:
     runs-on: ${{ matrix.config.os }}
-    name: ${{ matrix.config.os }} R-${{ matrix.config.r }}
+    name: ${{ matrix.config.os }} R-${{ matrix.config.r }} Zig-${{ matrix.config.zig || '0.16.0' }}
     strategy:
       fail-fast: false
       matrix:
@@ -21,9 +21,14 @@ jobs:
           - {os: windows-latest, r: release}
           - {os: ubuntu-latest, r: release}
           - {os: ubuntu-latest, r: devel}
+          - {os: macos-latest, r: release, zig: '0.17.0'}
+          - {os: windows-latest, r: release, zig: '0.17.0'}
+          - {os: ubuntu-latest, r: release, zig: '0.17.0'}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      # Empty selects the default automatic setup (Zig 0.16.0).
+      PNSBIB_ZIG_VERSION: ${{ matrix.config.zig }}
     steps:
       - uses: actions/checkout@v6
       - uses: r-lib/actions/setup-pandoc@v2
@@ -39,3 +44,14 @@ jobs:
         with:
           args: 'c("--as-cran", "--no-manual")'
           error-on: '"warning"'
+      - name: Report the compiler used by the check
+        if: always()
+        shell: bash
+        run: grep -h "Compiling with Zig" check/*.Rcheck/00install.out || true
+      - name: Native kernel tests
+        shell: bash
+        run: |
+          cd src/rzig
+          if [ "$RUNNER_OS" = "Windows" ]; then here="$(pwd -W)"; else here="$PWD"; fi
+          ZIG_GLOBAL_CACHE_DIR="$here/.zig-global-cache" Rscript --vanilla ../../inst/toolchain/zig-toolchain.R \
+            --build test --release=safe -j2 --summary all --cache-dir .zig-cache

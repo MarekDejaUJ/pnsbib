@@ -19,8 +19,7 @@ r_include_dir=$("$r_bin" --vanilla --slave -e 'cat(R.home("include"))') || {
     printf '%s\n' 'could not determine the R include directory' >&2
     exit 1
 }
-if test -z "$r_include_dir" || test ! -f "$r_include_dir/R.h" || \
-        test ! -f "$r_include_dir/R_ext/Visibility.h"; then
+if test -z "$r_include_dir" || test ! -f "$r_include_dir/R.h"; then
     printf 'R development headers missing from: %s\n' "$r_include_dir" >&2
     exit 1
 fi
@@ -77,5 +76,5 @@ sed -e "s|@ZIG_TARGET_ARG@|$target_sub|g" \
     -e "s|@STATLIB@|$statlib_sub|g" \
     "$makevars_template" > "$makevars_output"
 
-printf '%s\n' 'Zig 0.16.0 will be resolved during compilation (temporary setup by default).'
+printf '%s\n' 'Zig 0.16.x or 0.17.x will be resolved during compilation (temporary Zig 0.16.0 setup by default).'
 printf 'using R compiler %s for %s\n' "$r_cc" "$zig_target_arg"

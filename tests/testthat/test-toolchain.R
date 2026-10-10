@@ -22,28 +22,72 @@ test_that("the compiler stays alive through build and temporary storage is clean
     expect_identical(args,c("build",shQuote(c("-j2","-Dname=with space"))))
     0L
   }
-  expect_message(toolchain$pnsbib_zig_build(c("-j2","-Dname=with space"),runner,resolver),"Compiling")
+  expect_message(toolchain$pnsbib_zig_build(c("-j2","-Dname=with space"),runner,resolver,
+                                            probe=function(path) "0.17.0"),"Compiling with Zig 0[.]17[.]0: ")
   expect_false(dir.exists(cache))
   expect_error(suppressMessages(toolchain$pnsbib_zig_build(character(),
-    function(...) 1L,resolver)),"compilation failed")
+    function(...) 1L,resolver,probe=function(path) "0.16.0")),"compilation failed")
   expect_false(dir.exists(cache))
 })
 
 test_that("automatic compiler archives have fixed platform-specific checksums", {
-  for(os in c("Darwin","Linux","Windows")) for(arch in c("aarch64","x86_64")) {
-    s <- toolchain$pnsbib_zig_spec(os,arch)
-    expect_identical(s$version,"0.16.0")
-    expect_match(s$sha256,"^[a-f0-9]{64}$")
-    expect_match(s$url,"^https://ziglang.org/download/0[.]16[.]0/zig-")
-    expect_gt(s$size,50000000)
-    expect_identical(s$format,if(os=="Windows") "zip" else "tar.xz")
-  }
+  hashes <- character()
+  for(version in c("0.16.0","0.17.0")) for(os in c("Darwin","Linux","Windows"))
+    for(arch in c("aarch64","x86_64")) {
+      s <- toolchain$pnsbib_zig_spec(os,arch,version)
+      expect_identical(s$version,version)
+      expect_match(s$sha256,"^[a-f0-9]{64}$")
+      expect_identical(s$url,paste0("https://ziglang.org/download/",version,"/zig-",s$key,"-",
+                                    version,".",s$format))
+      expect_gt(s$size,50000000)
+      expect_identical(s$format,if(os=="Windows") "zip" else "tar.xz")
+      hashes <- c(hashes,s$sha256)
+    }
+  expect_identical(anyDuplicated(hashes),0L)
+  expect_identical(toolchain$pnsbib_zig_spec("Darwin","arm64","0.16.0")$sha256,
+                   "b23d70deaa879b5c2d486ed3316f7eaa53e84acf6fc9cc747de152450d401489")
+  expect_identical(toolchain$pnsbib_zig_spec("Darwin","arm64","0.17.0")$sha256,
+                   "b607e9b9234790a008116ae5bdb71c6243b84b9fb42a53a9e70fde41c06c536a")
+  expect_error(toolchain$pnsbib_zig_spec("Linux","x86_64","0.15.2"),"No pinned Zig archive")
   expect_identical(toolchain$pnsbib_zig_spec("Darwin","arm64"),
                    toolchain$pnsbib_zig_spec("Darwin","aarch64"))
   expect_identical(toolchain$pnsbib_zig_spec("Linux","amd64"),
                    toolchain$pnsbib_zig_spec("Linux","x86_64"))
   expect_error(toolchain$pnsbib_zig_spec("Plan9","x86_64"),"supports macOS")
   expect_error(toolchain$pnsbib_zig_spec("Linux","armv7"),"supports aarch64")
+})
+
+test_that("Zig 0.16 and 0.17 are accepted and other series are rejected", {
+  for(v in c("0.16.0","0.16.1","0.17.0","0.17.2"))
+    expect_true(toolchain$pnsbib_zig_supported(v))
+  for(v in c("","0.15.2","0.18.0","0.16.0-dev.1+abc","1.16.0","0.160.0","zig 0.16.0"))
+    expect_false(toolchain$pnsbib_zig_supported(v))
+})
+
+test_that("automatic setup downloads Zig 0.16.0 unless 0.17.0 is requested", {
+  expect_identical(toolchain$pnsbib_zig_download_version(""),"0.16.0")
+  expect_identical(toolchain$pnsbib_zig_download_version("0.16.0"),"0.16.0")
+  expect_identical(toolchain$pnsbib_zig_download_version("0.17.0"),"0.17.0")
+  expect_error(toolchain$pnsbib_zig_download_version("0.18.0"),"0.16.0 or 0.17.0; found 0.18.0")
+})
+
+test_that("an explicit ZIG executable must belong to a supported series", {
+  path <- tempfile("zig-fixture-");writeLines("fixture",path)
+  old <- Sys.getenv("ZIG",unset=NA_character_)
+  probe <- toolchain$pnsbib_zig_version
+  on.exit({unlink(path);assign("pnsbib_zig_version",probe,envir=toolchain)
+    if(is.na(old)) Sys.unsetenv("ZIG") else Sys.setenv(ZIG=old)},add=TRUE)
+  Sys.setenv(ZIG=path)
+  for(v in c("0.16.0","0.17.0")) {
+    toolchain$pnsbib_zig_version <- function(path) v
+    expect_identical(toolchain$pnsbib_zig_resolve(),normalizePath(path,winslash="/"))
+  }
+  for(v in c("0.15.2","0.18.0")) {
+    toolchain$pnsbib_zig_version <- function(path) v
+    expect_error(toolchain$pnsbib_zig_resolve(),paste0("found ",v))
+  }
+  toolchain$pnsbib_zig_version <- function(path) ""
+  expect_error(toolchain$pnsbib_zig_resolve(),"found no working Zig")
 })
 
 test_that("archive paths cannot escape the verified root", {

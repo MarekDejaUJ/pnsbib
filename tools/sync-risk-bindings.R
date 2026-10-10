@@ -29,5 +29,12 @@ for(name in rev(names(entries))) {
   binding <- paste0('  ',name,'_ = "',name,'",')
   if(!grepl(binding,ns,fixed=TRUE)) ns <- insert_after(ns,'useDynLib("pnsbib",',paste0('\n',binding))
 }
+# rzig::document() writes its own regeneration hint; keep pnsbib's maintainer reminder.
+reminder <- paste0("//! After regeneration, restore the two internal risk bindings using\n",
+                   "//! tools/sync-risk-bindings.R; see inst/doc/adjusted-risks.md.")
+text <- sub("//! Regenerate with [^\n]*",reminder,text)
+if(!grepl("// Maintained internal bindings",text,fixed=TRUE))
+  text <- insert_after(text,"pub const exports = .{",
+    "\n            // Maintained internal bindings, without additional public R exports.")
 writeLines(text,manifest,useBytes=TRUE)
 writeLines(ns,namespace,useBytes=TRUE)

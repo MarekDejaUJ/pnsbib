@@ -130,8 +130,8 @@ test "closed form retains distinct-subset upper candidates and theorem labels" {
 }
 
 test "repeated matching outcomes retain the project-extension label" {
-    const o = [_]f64{1.0 / 9.0} ** 9;
-    const a = [_]f64{1.0 / 3.0} ** 9;
+    const o: [9]f64 = @splat(1.0 / 9.0);
+    const a: [9]f64 = @splat(1.0 / 3.0);
     var px: [3]f64 = undefined;
     var py: [3]f64 = undefined;
     var selected: [3]bool = undefined;

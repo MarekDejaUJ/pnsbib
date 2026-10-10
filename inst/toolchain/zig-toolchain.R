@@ -1,28 +1,51 @@
 # Source-installation helper. Compiler archives are pinned to the publisher's
-# SHA-256 values at https://ziglang.org/download/index.json (Zig 0.16.0).
-pnsbib_zig_spec <- function(os=Sys.info()[["sysname"]], arch=R.version$arch) {
+# SHA-256 values at https://ziglang.org/download/index.json (Zig 0.16.0 and 0.17.0).
+pnsbib_zig_supported <- function(version) grepl("^0[.]1[67][.][0-9]+$",version)
+
+pnsbib_zig_download_version <- function(requested=Sys.getenv("PNSBIB_ZIG_VERSION","")) {
+  if(!nzchar(requested)) return("0.16.0")
+  if(!requested %in% c("0.16.0","0.17.0"))
+    stop("PNSBIB_ZIG_VERSION must be 0.16.0 or 0.17.0; found ",requested,".")
+  requested
+}
+
+pnsbib_zig_spec <- function(os=Sys.info()[["sysname"]], arch=R.version$arch,
+                            version=pnsbib_zig_download_version()) {
   os <- switch(tolower(os),darwin="macos",linux="linux",windows="windows",
                stop("Automatic Zig setup supports macOS, Linux and Windows."))
   arch <- switch(tolower(arch),arm64="aarch64",aarch64="aarch64",
                  x86_64="x86_64",amd64="x86_64",
                  stop("Automatic Zig setup supports aarch64 and x86_64 R."))
   key <- paste(arch,os,sep="-")
-  hashes <- c(
-    "aarch64-macos"="b23d70deaa879b5c2d486ed3316f7eaa53e84acf6fc9cc747de152450d401489",
-    "x86_64-macos"="0387557ed1877bc6a2e1802c8391953baddba76081876301c522f52977b52ba7",
-    "aarch64-linux"="ea4b09bfb22ec6f6c6ceac57ab63efb6b46e17ab08d21f69f3a48b38e1534f17",
-    "x86_64-linux"="70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00",
-    "aarch64-windows"="aee38316ee4111717900f45dd3130145c39289e105541d737eb8c5ed653c78ef",
-    "x86_64-windows"="68659eb5f1e4eb1437a722f1dd889c5a322c9954607f5edcf337bc3684a75a7e")
-  sizes <- c("aarch64-macos"=52238004,"x86_64-macos"=57396836,
-             "aarch64-linux"=51211944,"x86_64-linux"=55478392,
-             "aarch64-windows"=93109828,"x86_64-windows"=97217739)
-  top <- paste0("zig-",key,"-0.16.0")
+  pins <- list(
+    "0.16.0"=list(
+      hashes=c("aarch64-macos"="b23d70deaa879b5c2d486ed3316f7eaa53e84acf6fc9cc747de152450d401489",
+               "x86_64-macos"="0387557ed1877bc6a2e1802c8391953baddba76081876301c522f52977b52ba7",
+               "aarch64-linux"="ea4b09bfb22ec6f6c6ceac57ab63efb6b46e17ab08d21f69f3a48b38e1534f17",
+               "x86_64-linux"="70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00",
+               "aarch64-windows"="aee38316ee4111717900f45dd3130145c39289e105541d737eb8c5ed653c78ef",
+               "x86_64-windows"="68659eb5f1e4eb1437a722f1dd889c5a322c9954607f5edcf337bc3684a75a7e"),
+      sizes=c("aarch64-macos"=52238004,"x86_64-macos"=57396836,
+              "aarch64-linux"=51211944,"x86_64-linux"=55478392,
+              "aarch64-windows"=93109828,"x86_64-windows"=97217739)),
+    "0.17.0"=list(
+      hashes=c("aarch64-macos"="b607e9b9234790a008116ae5bdb71c6243b84b9fb42a53a9e70fde41c06c536a",
+               "x86_64-macos"="4f9a1c5269aa17ebda5e6d3c2b89d6cbf36f7d2b22a0306e9ab98f25f95529c6",
+               "aarch64-linux"="9e8d11661d4ae3bd57702a3832781e23ad151dde5798e16a5ccd503f65234ff8",
+               "x86_64-linux"="1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026",
+               "aarch64-windows"="0a59d91fa1cb40cf068e9b0954434ce973500c7a2ea749f1e01af62cdab52d26",
+               "x86_64-windows"="b5663f69581dcf391293fbf16c06cb80d81d806545ce618b4d0bab7f0eb8c428"),
+      sizes=c("aarch64-macos"=53985220,"x86_64-macos"=59317572,
+              "aarch64-linux"=52877280,"x86_64-linux"=57332648,
+              "aarch64-windows"=95992853,"x86_64-windows"=100268137)))
+  if(!version %in% names(pins)) stop("No pinned Zig archive for version ",version,".")
+  pin <- pins[[version]]
+  top <- paste0("zig-",key,"-",version)
   format <- if(os=="windows") "zip" else "tar.xz"
-  list(version="0.16.0",key=key,top=top,format=format,
+  list(version=version,key=key,top=top,format=format,
        executable=if(os=="windows") "zig.exe" else "zig",
-       url=paste0("https://ziglang.org/download/0.16.0/",top,".",format),
-       sha256=unname(hashes[key]),size=unname(sizes[key]))
+       url=paste0("https://ziglang.org/download/",version,"/",top,".",format),
+       sha256=unname(pin$hashes[key]),size=unname(pin$sizes[key]))
 }
 
 pnsbib_zig_version <- function(path) {
@@ -121,16 +144,17 @@ pnsbib_zig_cache <- function(explicit=Sys.getenv("PNSBIB_ZIG_CACHE","")) {
 }
 
 pnsbib_zig_resolve <- function() {
-  version <- "0.16.0"
   explicit <- Sys.getenv("ZIG","")
   if(nzchar(explicit)) {
     if(!file.exists(explicit)) explicit <- unname(Sys.which(explicit))
-    if(!nzchar(explicit) || pnsbib_zig_version(explicit)!=version)
-      stop("ZIG must name a working Zig ",version," executable; unset ZIG for automatic setup.")
+    found <- if(nzchar(explicit)) pnsbib_zig_version(explicit) else ""
+    if(!pnsbib_zig_supported(found))
+      stop("ZIG must name a working Zig 0.16.x or 0.17.x executable (found ",
+           if(nzchar(found)) found else "no working Zig","); unset ZIG for automatic setup.")
     return(normalizePath(explicit,winslash="/",mustWork=TRUE))
   }
   found <- unname(Sys.which("zig"))
-  if(nzchar(found) && pnsbib_zig_version(found)==version)
+  if(nzchar(found) && pnsbib_zig_supported(pnsbib_zig_version(found)))
     return(normalizePath(found,winslash="/",mustWork=TRUE))
   spec <- pnsbib_zig_spec()
   cache <- pnsbib_zig_cache()
@@ -139,7 +163,8 @@ pnsbib_zig_resolve <- function() {
   pnsbib_zig_install(spec,cache,archive,download)
 }
 
-pnsbib_zig_build <- function(args,runner=system2,resolver=pnsbib_zig_resolve) {
+pnsbib_zig_build <- function(args,runner=system2,resolver=pnsbib_zig_resolve,
+                             probe=pnsbib_zig_version) {
   # The R process owns the default compiler cache for the entire build.
   # An explicit persistent cache is user-managed and is never removed here.
   cache <- pnsbib_zig_cache("")
@@ -150,7 +175,8 @@ pnsbib_zig_build <- function(args,runner=system2,resolver=pnsbib_zig_resolve) {
   on.exit(if(is.na(previous_tmp)) Sys.unsetenv("TMPDIR") else
     Sys.setenv(TMPDIR=previous_tmp),add=TRUE)
   zig <- resolver()
-  message("Compiling with Zig 0.16.0: ",zig)
+  version <- probe(zig)
+  message("Compiling with Zig ",if(nzchar(version)) paste0(version,": ") else "",zig)
   status <- runner(zig,c("build",shQuote(args)))
   if(!identical(as.integer(status),0L)) stop("Zig compilation failed (status ",status,").")
   invisible(status)

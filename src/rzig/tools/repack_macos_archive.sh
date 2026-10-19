@@ -16,7 +16,8 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-# Apple tool shims can create xcrun_db; keep it inside this owned directory.
+# The Apple tool shims (xcrun) can write a cache file such as xcrun_db into
+# TMPDIR; keep it inside the directory this script removes.
 TMPDIR=$repack_dir
 export TMPDIR
 

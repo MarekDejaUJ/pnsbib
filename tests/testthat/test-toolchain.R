@@ -90,6 +90,30 @@ test_that("an explicit ZIG executable must belong to a supported series", {
   expect_error(toolchain$pnsbib_zig_resolve(),"found no working Zig")
 })
 
+test_that("a compiler installed by rzig::install_zig() is used before a download", {
+  home <- tempfile("rzig-home-")
+  for(v in c("0.15.2","0.16.0","0.17.0")) {
+    dir.create(file.path(home,paste0("zig-test-",v)),recursive=TRUE)
+    writeLines("fixture",file.path(home,paste0("zig-test-",v),"zig"))
+  }
+  old <- Sys.getenv(c("ZIG","RZIG_ZIG_HOME"),unset=NA_character_)
+  probe <- toolchain$pnsbib_zig_version
+  on.exit({unlink(home,recursive=TRUE);assign("pnsbib_zig_version",probe,envir=toolchain)
+    if(exists("Sys.which",envir=toolchain,inherits=FALSE)) rm("Sys.which",envir=toolchain)
+    for(n in names(old)) if(is.na(old[[n]])) Sys.unsetenv(n) else do.call(Sys.setenv,as.list(old[n]))},add=TRUE)
+  version_of <- function(path) sub("^zig-test-","",basename(dirname(path)))
+  expected <- function(v) normalizePath(file.path(home,paste0("zig-test-",v),"zig"),winslash="/")
+  expect_identical(toolchain$pnsbib_zig_home("/explicit/home"),"/explicit/home")
+  expect_identical(toolchain$pnsbib_zig_installed(home,version_of),expected("0.17.0"))
+  expect_identical(toolchain$pnsbib_zig_installed(home,function(path)
+    if(grepl("0[.]17",path)) "0.17.0-dev.1+abc" else version_of(path)),expected("0.16.0"))
+  expect_identical(toolchain$pnsbib_zig_installed(file.path(home,"missing"),version_of),"")
+  Sys.unsetenv("ZIG");Sys.setenv(RZIG_ZIG_HOME=home)
+  toolchain$Sys.which <- function(names) c(zig="")
+  toolchain$pnsbib_zig_version <- version_of
+  expect_identical(toolchain$pnsbib_zig_resolve(),expected("0.17.0"))
+})
+
 test_that("archive paths cannot escape the verified root", {
   expect_true(toolchain$pnsbib_zig_members(c("zig-test/","zig-test/zig","zig-test/lib/std.zig"),"zig-test"))
   for(path in c("../zig","zig-test/../escape","/zig-test/zig","C:/zig-test/zig",

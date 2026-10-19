@@ -1,3 +1,10 @@
+# pnsbib 0.2.2
+
+- Refresh the vendored rzig framework to rzig 1.0.0, the first release with a stable interface, using `rzig::update_rzig()`. The two internal risk routines are marked `/// @export internal`, so regenerated bindings keep them registered and unexported without a separate maintenance script.
+- Build for the macOS version that R itself links for (from `MACOSX_DEPLOYMENT_TARGET` or `libR.dylib`) in place of a fixed macOS 13.0, detect musl-based Linux, and accept `RZIG_ZIG_TARGET` to name the Zig target explicitly. The Zig library is rebuilt on every installation, so a change to any Zig source reaches the installed package.
+- Use a supported Zig installed by `rzig::install_zig()` (or found in `RZIG_ZIG_HOME`) before obtaining a temporary copy.
+- Numerical kernels, R functions, exported interfaces, defaults, tolerances and results are unchanged: the test suite and the reproduction scripts give byte-identical outputs.
+
 # pnsbib 0.2.1
 
 - Support Zig 0.16.x and 0.17.x. An explicit `ZIG` executable or a `zig` on the `PATH` from either series is used directly; other series are rejected with the version found. Automatic setup still obtains Zig 0.16.0; `PNSBIB_ZIG_VERSION=0.17.0` selects Zig 0.17.0 instead, verified against its published SHA-256 and size.

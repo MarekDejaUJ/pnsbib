@@ -15,7 +15,7 @@ remotes::install_github("MarekDejaUJ/pnsbib", upgrade = "never")
 
 The repository root is the R package; no `subdir` argument is needed. Source installation uses Zig 0.16.x or 0.17.x and automatically obtains Zig 0.16.0 when no supported version is available. The R-only installer downloads the official archive, checks its pinned size and SHA-256 before extraction, and keeps the compiler in the build R session's temporary directory, outside the package source. Temporary compiler files are removed after compilation. A first download is approximately 49–96 MiB depending on platform and version; extraction needs additional disk space. An existing compatible compiler is reused; otherwise each source installation obtains a temporary copy. There is no Python requirement, manual Zig download or special project folder to configure. An installed binary requires no compiler.
 
-The generated rzig 0.3.0 framework is bundled; `rzig` (0.3.0 or later, from GitHub) is a suggested development dependency for regenerating bindings, not a runtime requirement. Automatic compiler setup is provided by pnsbib, independently of rzig. Imported R dependencies are installed automatically. Building requires a C toolchain suitable for R: Xcode Command Line Tools on macOS, R development headers and a C compiler on Linux, or the matching Rtools distribution on Windows. Automatic archive selection covers aarch64 and x86_64 on macOS, Linux and Windows. The current release is locally validated on macOS; other platforms require their own checks.
+The generated rzig 1.0.0 framework is bundled; `rzig` (1.0.0 or later) is a suggested development dependency for regenerating bindings, not a runtime requirement. Automatic compiler setup is provided by pnsbib, independently of rzig; a supported Zig installed with `rzig::install_zig()` is reused. Imported R dependencies are installed automatically. Building requires a C toolchain suitable for R: Xcode Command Line Tools on macOS, R development headers and a C compiler on Linux, or the matching Rtools distribution on Windows. Automatic archive selection covers aarch64 and x86_64 on macOS, Linux and Windows. The repository's continuous integration checks the package with `R CMD check --as-cran` on macOS, Windows and Linux with Zig 0.16 and 0.17, and on Linux with R-devel.
 
 For managed or offline installations, `ZIG` can select an existing Zig 0.16.x or 0.17.x executable, `PNSBIB_ZIG_VERSION=0.17.0` makes automatic setup obtain Zig 0.17.0 in place of 0.16.0, `PNSBIB_ZIG_CACHE` can explicitly opt into a persistent cache at a user-chosen absolute path, and `PNSBIB_ZIG_ARCHIVE` can supply the matching official archive locally. The local archive undergoes the same pinned size and SHA-256 checks. `PNSBIB_ZIG_DOWNLOAD=false` disables network downloads. A wrong explicit compiler, corrupt archive or invalid cache entry causes an error; the installer does not silently substitute an unverified compiler. These settings are optional and are unnecessary for ordinary online installation.
 
@@ -156,8 +156,8 @@ remotes::install_github("MarekDejaUJ/rzig")
 
 ```sh
 R CMD build pnsbib
-R CMD check --no-manual pnsbib_0.2.1.tar.gz
-R CMD INSTALL pnsbib_0.2.1.tar.gz
+R CMD check --no-manual pnsbib_0.2.2.tar.gz
+R CMD INSTALL pnsbib_0.2.2.tar.gz
 ```
 
 To obtain the source, run `git clone https://github.com/MarekDejaUJ/pnsbib.git` from the parent directory before these commands. `R CMD check` runs the R regression suite and installed examples. To run the standalone kernel tests from the cloned `pnsbib` directory, use the same managed build helper so that the temporary compiler remains available until testing finishes:

@@ -58,4 +58,4 @@ For input-stability analysis, resample whole independent units, refit the estima
 
 ## Binding maintenance
 
-Builds use the bundled rzig manifest. The two native risk routines are internal; only the validated R wrappers are public exports. Package developers who regenerate bindings should run `Rscript tools/sync-risk-bindings.R .` from the package source directory afterward. The helper restores the two internal registrations. Preserve R-header discovery and platform linker configuration and rerun the tests. Ordinary package installation requires neither regeneration nor this helper.
+Builds use the bundled rzig manifest. The two native risk routines are internal; only the validated R wrappers are public exports. Their `/// @export internal` markers in `src/rzig/src/main.zig` keep them registered and unexported when package developers regenerate the bindings with `rzig::update_rzig()` or `rzig::document()` (rzig 1.0.0 or later). Preserve R-header discovery and platform linker configuration and rerun the tests. Ordinary package installation requires no regeneration.

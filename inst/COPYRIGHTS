@@ -2,7 +2,7 @@ pnsbib
 Copyright (c) 2026 Marek Deja
 Distributed under the GNU General Public License, version 3.
 
-The generated framework under src/rzig/framework is derived from rzig 0.3.0
+The generated framework under src/rzig/framework is derived from rzig 1.0.0
 (https://github.com/MarekDejaUJ/rzig), Copyright (c) 2026 Marek Deja,
 distributed under the GNU General Public License, version 3. Framework files
 carried over from rzig 0.2.3 were also distributed under the following terms:

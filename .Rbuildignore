@@ -3,7 +3,7 @@
 ^\.git$
 ^\.github$
 ^\.gitignore$
-^tools$
 ^src/rzig/\.zig-cache$
 ^src/rzig/\.zig-global-cache$
 ^src/rzig/zig-out$
+^src/rzig/\.zig-download$

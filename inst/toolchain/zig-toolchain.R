@@ -143,6 +143,19 @@ pnsbib_zig_cache <- function(explicit=Sys.getenv("PNSBIB_ZIG_CACHE","")) {
   if(nzchar(explicit)) file.path(explicit,"zig") else file.path(tempdir(),"pnsbib-zig")
 }
 
+# The folder of rzig::install_zig(): RZIG_ZIG_HOME, or zig in the user cache
+# folder of rzig. It is only read here; pnsbib never writes to it.
+pnsbib_zig_home <- function(explicit=Sys.getenv("RZIG_ZIG_HOME","")) {
+  if(nzchar(explicit)) explicit else file.path(tools::R_user_dir("rzig","cache"),"zig")
+}
+
+pnsbib_zig_installed <- function(home=pnsbib_zig_home(),probe=pnsbib_zig_version) {
+  candidates <- Sys.glob(file.path(home,"zig-*",c("zig","zig.exe")))
+  for(path in sort(candidates,decreasing=TRUE))
+    if(pnsbib_zig_supported(probe(path))) return(normalizePath(path,winslash="/",mustWork=TRUE))
+  ""
+}
+
 pnsbib_zig_resolve <- function() {
   explicit <- Sys.getenv("ZIG","")
   if(nzchar(explicit)) {
@@ -156,6 +169,8 @@ pnsbib_zig_resolve <- function() {
   found <- unname(Sys.which("zig"))
   if(nzchar(found) && pnsbib_zig_supported(pnsbib_zig_version(found)))
     return(normalizePath(found,winslash="/",mustWork=TRUE))
+  installed <- pnsbib_zig_installed()
+  if(nzchar(installed)) return(installed)
   spec <- pnsbib_zig_spec()
   cache <- pnsbib_zig_cache()
   archive <- Sys.getenv("PNSBIB_ZIG_ARCHIVE","")

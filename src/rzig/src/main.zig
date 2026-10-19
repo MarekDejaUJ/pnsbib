@@ -9,6 +9,7 @@ const static = @import("static.zig");
 const risk = @import("risk.zig");
 
 /// Internal penalized binary-risk fit; column-major numeric inputs.
+/// @export internal
 pub fn poc_risk_fit_zig(ctx: *rzig.Ctx, n: usize, p: usize, m: usize, x: []const f64, y: []const f64, weights: []const f64, target: []const f64, penalty: []const f64, lambda: f64, max_iterations: usize, tolerance: f64) rzig.Error![]f64 {
     try rzig.checkInterrupt();
     const size = risk.workspaceSize(n, p, m) catch |err| return rzig.raise("Risk dimensions: {s}", .{@errorName(err)});
@@ -23,6 +24,7 @@ pub fn poc_risk_fit_zig(ctx: *rzig.Ctx, n: usize, p: usize, m: usize, x: []const
 }
 
 /// Internal target standardization, returning risks and individual paths.
+/// @export internal
 pub fn poc_risk_standardize_zig(ctx: *rzig.Ctx, n: usize, t: usize, pred: []const f64, weights: []const f64, cumulative: bool) rzig.Error![]f64 {
     if (n == 0 or t == 0 or n > 8_000_000 or t > 8_000_000 / n) return rzig.raise("Risk dimensions: InvalidDimensions", .{});
     const output = try ctx.alloc(f64, t + n * t);
